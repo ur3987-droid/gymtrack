@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<title>Bull's Gym — Check-in</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+:root{
+  --bg:#0d0505; --card:#160808; --border:#2a1010;
+  --accent:#e8c619; --danger:#ff3333; --success:#3ddc84;
+  --red:#cc2222; --text:#f0f0f0; --muted:#666;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow:hidden;}
+
+/* FONDO ANIMADO */
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:.3;z-index:0;}
+.bg-glow{position:fixed;width:500px;height:500px;border-radius:50%;filter:blur(120px);z-index:0;opacity:.15;animation:drift 8s ease-in-out infinite alternate;}
+.bg-glow.g1{background:var(--red);top:-100px;left:-100px;}
+.bg-glow.g2{background:#8a0000;bottom:-100px;right:-100px;animation-delay:-4s;}
+@keyframes drift{0%{transform:translate(0,0)}100%{transform:translate(40px,30px)}}
+
+/* LAYOUT */
+.screen{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center;}
+
+/* ESTADOS */
+.state{display:none;flex-direction:column;align-items:center;gap:0;width:100%;max-width:340px;}
+.state.show{display:flex;}
+
+/* LOADING */
+.spinner{width:60px;height:60px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:20px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SUCCESS */
+.check-ring{width:100px;height:100px;border-radius:50%;border:3px solid var(--success);display:flex;align-items:center;justify-content:center;position:relative;animation:ring-in .5s cubic-bezier(.34,1.56,.64,1) forwards;margin-bottom:20px;}
+@keyframes ring-in{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
+.check-mark{font-size:44px;color:var(--success);animation:mark-in .3s .2s both;}
+@keyframes mark-in{0%{transform:scale(0)}100%{transform:scale(1)}}
+.pulse-ring{position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--success);animation:pulse-out 1.5s ease-out infinite;}
+@keyframes pulse-out{0%{transform:scale(1);opacity:.6}100%{transform:scale(1.4);opacity:0}}
+
+/* EXPIRED */
+.x-ring{width:100px;height:100px;border-radius:50%;border:3px solid var(--danger);display:flex;align-items:center;justify-content:center;margin-bottom:24px;animation:ring-in .4s cubic-bezier(.34,1.56,.64,1) forwards;}
+
+/* CARD INFO */
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px 28px;width:100%;margin-bottom:16px;text-align:left;}
+.info-label{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.8px;margin-bottom:4px;}
+.info-val{font-size:15px;font-weight:600;}
+.info-row{margin-bottom:14px;}
+.info-row:last-child{margin-bottom:0;}
+
+.title-big{font-family:'Bebas Neue';font-size:32px;letter-spacing:2px;margin-bottom:6px;}
+.subtitle{font-size:14px;color:var(--muted);margin-bottom:24px;}
+.gym-logo{font-family:'Bebas Neue';font-size:18px;color:var(--accent);letter-spacing:3px;margin-bottom:32px;opacity:.8;}
+
+/* BADGE */
+.mbadge{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.4px;margin-bottom:6px;}
+.mbadge-ok{background:#3ddc8418;color:var(--success);border:1px solid #3ddc8430;}
+.mbadge-warn{background:#ff6b2b18;color:#ff6b2b;border:1px solid #ff6b2b30;}
+.mbadge-bad{background:#ff444418;color:var(--danger);border:1px solid #ff444430;}
+
+/* TIME */
+.time-display{font-family:'Bebas Neue';font-size:48px;color:var(--accent);letter-spacing:3px;line-height:1;margin-bottom:4px;}
+.date-display{font-size:12px;color:var(--muted);}
+
+/* BTN */
+.btn{border:none;border-radius:10px;padding:14px 28px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:14px;cursor:pointer;width:100%;transition:all .15s;margin-top:8px;}
+.btn-ok{background:var(--accent);color:#000;}
+.btn-ok:hover{background:#d4eb30;}
+.btn-ghost{background:#1e1e1e;color:var(--text);border:1px solid var(--border);}
+
+/* NOT FOUND */
+.error-icon{font-size:64px;margin-bottom:16px;opacity:.5;}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow g1"></div>
+<div class="bg-glow g2"></div>
+
+<div class="screen">
+  <div style="text-align:center;margin-bottom:28px;">
+    <div style="font-family:'Bebas Neue';font-size:28px;color:var(--accent);letter-spacing:4px;line-height:1;">BULL'S GYM</div>
+    <div style="font-size:10px;color:var(--red);letter-spacing:3px;font-weight:700;margin-top:2px;">FITNESS CENTER</div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="state show" id="state-loading">
+    <div class="spinner"></div>
+    <div style="font-size:14px;color:var(--muted);">Verificando membresía...</div>
+  </div>
+
+  <!-- SUCCESS: CHECK-IN OK -->
+  <div class="state" id="state-success">
+    <div class="check-ring">
+      <div class="pulse-ring"></div>
+      <div class="check-mark">✓</div>
+    </div>
+    <div class="time-display" id="s-time"></div>
+    <div class="date-display" id="s-date"></div>
+    <div style="height:24px;"></div>
+    <div class="info-card">
+      <div class="info-row">
+        <div class="info-label">BIENVENIDO</div>
+        <div class="info-val" id="s-nombre" style="font-size:20px;"></div>
+      </div>
+      <div style="display:flex;gap:16px;">
+        <div class="info-row" style="flex:1;">
+          <div class="info-label">MEMBRESÍA</div>
+          <div class="info-val" id="s-tipo" style="font-size:13px;"></div>
+        </div>
+        <div class="info-row" style="flex:1;">
+          <div class="info-label">VENCE</div>
+          <div class="info-val" id="s-vence" style="font-size:13px;"></div>
+        </div>
+      </div>
+      <div class="info-row" style="margin-bottom:0;">
+        <div class="info-label">ESTADO</div>
+        <div id="s-badge"></div>
+      </div>
+    </div>
+    <div id="s-dias" style="font-size:13px;color:var(--muted);margin-top:4px;"></div>
+  </div>
+
+  <!-- EXPIRED -->
+  <div class="state" id="state-expired">
+    <div class="x-ring"><span style="font-size:40px;color:var(--danger);">✕</span></div>
+    <div class="title-big" style="color:var(--danger);">MEMBRESÍA VENCIDA</div>
+    <div class="subtitle" id="e-nombre"></div>
+    <div class="info-card" style="border-color:#ff444430;">
+      <div class="info-row">
+        <div class="info-label">VENCIÓ EL</div>
+        <div class="info-val" id="e-vence" style="color:var(--danger);"></div>
+      </div>
+      <div class="info-row" style="margin-bottom:0;">
+        <div class="info-label">ACCIÓN REQUERIDA</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;">Por favor acércate a recepción para renovar tu membresía y continuar entrenando.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOT FOUND -->
+  <div class="state" id="state-notfound">
+    <div class="error-icon">◎</div>
+    <div class="title-big">QR NO VÁLIDO</div>
+    <div class="subtitle">No se encontró ningún cliente con este código.</div>
+    <div style="font-size:13px;color:var(--muted);">Por favor acércate a recepción para registrarte.</div>
+  </div>
+
+  <!-- DAYPASS OK -->
+  <div class="state" id="state-daypass">
+    <div style="font-size:72px;margin-bottom:16px;animation:ring-in .5s cubic-bezier(.34,1.56,.64,1);">⚡</div>
+    <div class="time-display" id="dp-time"></div>
+    <div class="date-display" id="dp-date"></div>
+    <div style="height:24px;"></div>
+    <div class="info-card">
+      <div class="info-row">
+        <div class="info-label">BIENVENIDO — DAY PASS</div>
+        <div class="info-val" id="dp-nombre" style="font-size:20px;"></div>
+      </div>
+      <div class="info-row" style="margin-bottom:0;">
+        <div class="info-label">ACCESO VÁLIDO</div>
+        <div style="font-size:13px;color:var(--muted);">Solo por hoy · <span id="dp-hoy" style="color:var(--accent);"></span></div>
+      </div>
+    </div>
+    <span class="mbadge mbadge-warn">⚡ Day Pass</span>
+  </div>
+
+</div>
+
+<script>
+// ─── UTILS ──────────────────────────────────────────────────────────────────
+function todayStr(){ return new Date().toISOString().split('T')[0]; }
+function diasRestantes(v){ return Math.ceil((new Date(v)-new Date(todayStr()))/86400000); }
+function nowTime(){ return new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}); }
+function nowDate(){ return new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'}); }
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+const SERVICES={mensual:'Mensual',trimestral:'Trimestral',semestral:'Semestral',anual:'Anual',daypass:'Day Pass'};
+
+// ─── LEER PARAMS ────────────────────────────────────────────────────────────
+const params=new URLSearchParams(location.search);
+const clienteId=parseInt(params.get('id')||'0');
+const nombreParam=params.get('nombre')||'';
+
+// ─── MOSTRAR ESTADO ─────────────────────────────────────────────────────────
+function showState(id){
+  document.querySelectorAll('.state').forEach(s=>{s.classList.remove('show');});
+  document.getElementById('state-'+id).classList.add('show');
+}
+
+// ─── LÓGICA PRINCIPAL ───────────────────────────────────────────────────────
+function run(){
+  // Leer datos del admin panel (mismo localStorage si están en el mismo dominio)
+  const raw=localStorage.getItem('gymtrack_data');
+  const DB=raw?JSON.parse(raw):null;
+
+  if(!clienteId){showState('notfound');return;}
+
+  if(!DB||!DB.clientes){
+    // Modo demo: sin datos reales, mostrar bienvenida con nombre del param
+    showSuccess({id:clienteId,nombre:nombreParam||'Cliente',tipo:'mensual',vence:todayStr(),foto:'??' });
+    return;
+  }
+
+  const cliente=DB.clientes.find(c=>c.id===clienteId);
+  if(!cliente){showState('notfound');return;}
+
+  if(cliente.tipo==='daypass'){
+    showDayPass(cliente,DB);return;
+  }
+
+  const d=diasRestantes(cliente.vence);
+  if(d<0){showExpired(cliente);return;}
+
+  // Check-in exitoso: registrar asistencia
+  DB.asistencias.push({id:DB.nextId++,clienteId:cliente.id,fecha:todayStr(),hora:nowTime(),tipo:'entrada'});
+  localStorage.setItem('gymtrack_data',JSON.stringify(DB));
+
+  showSuccess(cliente,d);
+}
+
+function showSuccess(c,dias){
+  document.getElementById('s-time').textContent=nowTime();
+  document.getElementById('s-date').textContent=cap(nowDate());
+  document.getElementById('s-nombre').textContent=c.nombre;
+  document.getElementById('s-tipo').textContent=SERVICES[c.tipo]||c.tipo;
+  document.getElementById('s-vence').textContent=c.vence;
+  const d=dias!=null?dias:diasRestantes(c.vence);
+  let badge,diasTxt;
+  if(d<=3){badge=`<span class="mbadge mbadge-warn">⚠ Vence en ${d}d</span>`;diasTxt=`Recuerda renovar tu membresía pronto.`;}
+  else{badge=`<span class="mbadge mbadge-ok">● Activo</span>`;diasTxt=`Te quedan ${d} días de membresía.`;}
+  document.getElementById('s-badge').innerHTML=badge;
+  document.getElementById('s-dias').textContent=diasTxt;
+  showState('success');
+}
+
+function showExpired(c){
+  document.getElementById('e-nombre').textContent=c.nombre;
+  document.getElementById('e-vence').textContent=c.vence;
+  showState('expired');
+}
+
+function showDayPass(c,DB){
+  document.getElementById('dp-time').textContent=nowTime();
+  document.getElementById('dp-date').textContent=cap(nowDate());
+  document.getElementById('dp-nombre').textContent=c.nombre;
+  document.getElementById('dp-hoy').textContent=todayStr();
+  showState('daypass');
+}
+
+// ─── RUN ────────────────────────────────────────────────────────────────────
+setTimeout(run, 900); // pequeño delay para mostrar loading
+</script>
+</body>
+</html>

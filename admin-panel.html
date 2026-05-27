@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bull's Gym — Panel Admin</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&display=swap');
+:root{
+  --bg:#0d0d0d;--surface:#111;--card:#181818;--border:#2a1a1a;
+  --accent:#e8c619;--accent2:#cc2222;--text:#f0f0f0;--muted:#777;
+  --danger:#ff3333;--success:#3ddc84;--red:#cc2222;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;min-height:100vh;}
+a{color:inherit;text-decoration:none;}
+input,select{background:#1c1c1c;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 13px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border .2s;width:100%;}
+input:focus,select:focus{border-color:var(--accent);}
+input::placeholder{color:var(--muted);}
+button{cursor:pointer;font-family:'DM Sans',sans-serif;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--border);}
+
+/* LOGO BAR */
+.logo{padding:20px 18px 16px;border-bottom:2px solid var(--accent2);background:linear-gradient(135deg,#1a0505,#111);}
+.logo-text{font-family:'Bebas Neue';font-size:22px;color:var(--accent);letter-spacing:3px;}
+.logo-sub{font-size:9px;color:var(--accent);margin-top:0;letter-spacing:2px;font-weight:700;}
+nav{flex:1;padding:12px 0;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;border:none;background:transparent;color:var(--muted);font-size:13px;width:100%;text-align:left;border-left:3px solid transparent;transition:all .15s;cursor:pointer;font-weight:500;}
+.nav-item.active{background:#cc222215;color:var(--accent);border-left-color:var(--accent);font-weight:700;}
+.nav-item:hover:not(.active){color:var(--text);background:#cc22220a;}
+.nav-icon{font-size:15px;width:18px;text-align:center;}
+.nav-badge{margin-left:auto;background:var(--danger);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;}
+.sidebar-footer{padding:16px 20px;border-top:1px solid #2a1010;}
+.sidebar-date{font-size:11px;color:var(--muted);}
+
+/* MAIN */
+#main{flex:1;padding:32px;overflow-y:auto;max-width:calc(100vw - 210px);}
+.page{display:none;}.page.active{display:block;}
+.page-title{font-family:'Bebas Neue';font-size:34px;letter-spacing:2px;margin-bottom:4px;}
+.page-sub{color:var(--muted);font-size:13px;margin-bottom:26px;}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+.stat-val{font-family:'Bebas Neue';font-size:36px;letter-spacing:1px;}
+.stat-label{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.3px;}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.4px;}
+.b-active{background:#3ddc8418;color:var(--success);border:1px solid #3ddc8430;}
+.b-expired{background:#ff444418;color:var(--danger);border:1px solid #ff444430;}
+.b-warn{background:#ff6b2b18;color:var(--accent2);border:1px solid #ff6b2b30;}
+.b-day{background:#e8ff4718;color:var(--accent);border:1px solid #e8ff4730;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;font-size:10px;color:var(--muted);font-weight:600;padding:0 14px 10px;letter-spacing:.6px;border-bottom:1px solid var(--border);}
+td{padding:12px 14px;font-size:13px;border-bottom:1px solid #1a1a1a;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#ffffff03;}
+
+/* AVATAR */
+.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;flex-shrink:0;}
+
+/* BUTTONS */
+.btn{border:none;border-radius:8px;padding:9px 16px;font-weight:600;font-size:12px;transition:all .15s;}
+.btn-primary{background:var(--accent);color:#000;}
+.btn-primary:hover{background:#d4eb30;}
+.btn-ghost{background:#2a2a2a;color:var(--text);}
+.btn-ghost:hover{background:#333;}
+.btn-danger{background:#ff444418;color:var(--danger);border:1px solid #ff444430;}
+.btn-sm{padding:6px 12px;font-size:11px;}
+
+/* FORM */
+.form-group{margin-bottom:14px;}
+.form-label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:6px;letter-spacing:.4px;}
+.form-row{display:grid;gap:12px;}
+.form-row-2{grid-template-columns:1fr 1fr;}
+.form-row-3{grid-template-columns:1fr 1fr 1fr;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:#000000cc;display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:92%;max-width:440px;transform:scale(.95);transition:transform .2s;}
+.modal-overlay.open .modal{transform:scale(1);}
+.modal-title{font-family:'Bebas Neue';font-size:22px;letter-spacing:1.5px;margin-bottom:4px;}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:20px;}
+
+/* QR */
+.qr-modal{max-width:360px;}
+#qr-canvas-wrap{display:flex;justify-content:center;margin:16px 0;}
+#qr-canvas-wrap canvas, #qr-canvas-wrap img{border-radius:10px;border:6px solid #fff;}
+.qr-client-name{font-family:'Bebas Neue';font-size:20px;letter-spacing:1px;text-align:center;margin-bottom:4px;}
+.qr-url{font-size:11px;color:var(--muted);text-align:center;word-break:break-all;margin-bottom:12px;}
+
+/* ALERT */
+.alert-item{background:var(--card);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;}
+.alert-item.warn{border:1px solid #ff6b2b30;}
+.alert-item.danger{border:1px solid #ff444430;}
+
+/* CHECKIN LOG */
+.log-item{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #1c1c1c;}
+.log-item:last-child{border-bottom:none;}
+
+/* CONFIG BOX */
+.config-box{background:#1a1a1a;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;}
+.config-title{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.6px;margin-bottom:10px;}
+.config-url{font-family:monospace;font-size:12px;background:#111;border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);word-break:break-all;}
+
+/* SUCCESS SCREEN */
+.success-screen{display:none;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;}
+.success-screen.show{display:flex;}
+.check-circle{width:64px;height:64px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:14px;animation:pop .3s ease;}
+@keyframes pop{0%{transform:scale(0)}80%{transform:scale(1.1)}100%{transform:scale(1)}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="logo">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <div style="width:38px;height:38px;border-radius:50%;background:radial-gradient(circle,#cc2222,#8a0000);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🐂</div>
+      <div>
+        <div class="logo-text" style="line-height:1;">BULL'S GYM</div>
+        <div class="logo-sub" style="color:var(--accent);letter-spacing:1.5px;">FITNESS CENTER</div>
+      </div>
+    </div>
+    <div style="font-size:9px;color:#555;letter-spacing:.4px;margin-top:4px;">PANEL DE ADMINISTRACIÓN</div>
+  </div>
+  <nav>
+    <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">◈</span>Dashboard</button>
+    <button class="nav-item" onclick="showPage('clientes',this)"><span class="nav-icon">◉</span>Clientes</button>
+    <button class="nav-item" onclick="showPage('asistencias',this)"><span class="nav-icon">◷</span>Asistencias</button>
+    <button class="nav-item" onclick="showPage('registro',this)"><span class="nav-icon">⊕</span>Registro</button>
+    <button class="nav-item" onclick="showPage('daypass',this)"><span class="nav-icon">⚡</span>Day Pass</button>
+    <button class="nav-item" onclick="showPage('alertas',this)"><span class="nav-icon">◐</span>Alertas<span class="nav-badge" id="alert-badge" style="display:none">0</span></button>
+    <button class="nav-item" onclick="showPage('config',this)"><span class="nav-icon">⚙</span>Configuración QR</button>
+    <button class="nav-item" onclick="showPage('emailconfig',this)"><span class="nav-icon">✉</span>Config. Correo</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-date" id="sidebar-date"></div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main id="main">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:6px;">
+      <div class="page-title" style="margin-bottom:0;">DASHBOARD</div>
+      <div style="height:2px;flex:1;background:linear-gradient(90deg,var(--accent2),transparent);border-radius:2px;"></div>
+    </div>
+    <div class="page-sub">Bull's Gym Fitness Center — Panel de control</div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-val" id="s-total">0</div><div class="stat-label">CLIENTES TOTALES</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--success)" id="s-active">0</div><div class="stat-label">ACTIVOS</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--accent)" id="s-hoy">0</div><div class="stat-label">ASISTENCIAS HOY</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--accent2)" id="s-alerts">0</div><div class="stat-label">ALERTAS</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="card">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.6px;margin-bottom:14px;">PRÓXIMOS A VENCER</div>
+        <div id="dash-vencer"><p style="color:var(--muted);font-size:13px;">Sin vencimientos próximos 🎉</p></div>
+      </div>
+      <div class="card">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.6px;margin-bottom:14px;">ÚLTIMAS ENTRADAS</div>
+        <div id="dash-recent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENTES -->
+  <div class="page" id="page-clientes">
+    <div class="page-title">CLIENTES</div>
+    <div class="page-sub" id="clientes-sub">0 clientes registrados</div>
+    <input placeholder="🔍 Buscar nombre, teléfono o correo..." id="search-input" oninput="renderClientes()" style="max-width:380px;margin-bottom:18px;"/>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr>
+          <th>CLIENTE</th><th>CONTACTO</th><th>MEMBRESÍA</th><th>VENCE</th><th>ESTADO</th><th>ACCIONES</th>
+        </tr></thead>
+        <tbody id="clientes-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ASISTENCIAS -->
+  <div class="page" id="page-asistencias">
+    <div class="page-title">ASISTENCIAS</div>
+    <div class="page-sub">Registro de entradas al gimnasio</div>
+    <div class="card" style="margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.6px;margin-bottom:14px;">REGISTRAR ENTRADA MANUAL</div>
+      <div class="form-row form-row-3" style="align-items:end;gap:10px;">
+        <div><div class="form-label">CLIENTE</div><select id="asist-cliente"><option value="">Seleccionar...</option></select></div>
+        <div><div class="form-label">FECHA</div><input type="date" id="asist-fecha"/></div>
+        <div><div class="form-label">HORA</div><input type="time" id="asist-hora"/></div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:12px;" onclick="registrarAsistencia()">⊕ Registrar Entrada</button>
+      <div id="asist-msg" style="font-size:13px;color:var(--success);margin-top:10px;display:none;"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.6px;">HISTORIAL</div>
+        <input type="date" id="filtro-fecha" oninput="renderAsistencias()" style="width:auto;"/>
+      </div>
+      <div id="asist-list"></div>
+    </div>
+  </div>
+
+  <!-- REGISTRO -->
+  <div class="page" id="page-registro">
+    <div class="page-title">REGISTRO</div>
+    <div class="page-sub">Inscripción de nuevo cliente</div>
+    <div class="card" style="max-width:600px;">
+      <div id="reg-form-wrap">
+
+        <!-- SECCIÓN: DATOS PERSONALES -->
+        <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.8px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);">◉ DATOS PERSONALES</div>
+        <div class="form-row form-row-2">
+          <div class="form-group"><div class="form-label">NOMBRE COMPLETO *</div><input id="reg-nombre" placeholder="Ana García López"/></div>
+          <div class="form-group"><div class="form-label">TELÉFONO *</div><input id="reg-tel" placeholder="555-0000"/></div>
+        </div>
+        <div class="form-row form-row-2">
+          <div class="form-group"><div class="form-label">CORREO ELECTRÓNICO</div><input type="email" id="reg-email" placeholder="correo@ejemplo.com"/></div>
+          <div class="form-group"><div class="form-label">SEXO</div>
+            <select id="reg-sexo">
+              <option value="">— Seleccionar —</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Femenino">Femenino</option>
+              <option value="Prefiero no decir">Prefiero no decir</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- SECCIÓN: DOMICILIO -->
+        <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.8px;margin:18px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border);">📍 DOMICILIO</div>
+        <div class="form-group">
+          <div class="form-label">CALLE Y NÚMERO</div>
+          <input id="reg-calle" placeholder="Ej. Av. Juárez 142 Int. 3"/>
+        </div>
+        <div class="form-row form-row-3">
+          <div class="form-group">
+            <div class="form-label">COLONIA</div>
+            <input id="reg-colonia" placeholder="Nombre de colonia"/>
+          </div>
+          <div class="form-group">
+            <div class="form-label">CIUDAD / MUNICIPIO</div>
+            <input id="reg-ciudad" placeholder="Ciudad o municipio"/>
+          </div>
+          <div class="form-group">
+            <div class="form-label">CÓDIGO POSTAL</div>
+            <input id="reg-cp" placeholder="00000" maxlength="5"/>
+          </div>
+        </div>
+        <div class="form-row form-row-2">
+          <div class="form-group">
+            <div class="form-label">ESTADO</div>
+            <select id="reg-estado">
+              <option value="">— Seleccionar —</option>
+              <option>Aguascalientes</option><option>Baja California</option><option>Baja California Sur</option>
+              <option>Campeche</option><option>Chiapas</option><option>Chihuahua</option>
+              <option>Ciudad de México</option><option>Coahuila</option><option>Colima</option>
+              <option>Durango</option><option>Estado de México</option><option>Guanajuato</option>
+              <option>Guerrero</option><option>Hidalgo</option><option>Jalisco</option>
+              <option>Michoacán</option><option>Morelos</option><option>Nayarit</option>
+              <option>Nuevo León</option><option>Oaxaca</option><option>Puebla</option>
+              <option>Querétaro</option><option>Quintana Roo</option><option>San Luis Potosí</option>
+              <option>Sinaloa</option><option>Sonora</option><option>Tabasco</option>
+              <option>Tamaulipas</option><option>Tlaxcala</option><option>Veracruz</option>
+              <option>Yucatán</option><option>Zacatecas</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <div class="form-label">REFERENCIAS (opcional)</div>
+            <input id="reg-referencias" placeholder="Ej. Entre calle Morelos y Allende"/>
+          </div>
+        </div>
+
+        <!-- SECCIÓN: DATOS FÍSICOS -->
+        <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.8px;margin:18px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border);">◈ DATOS FÍSICOS</div>
+        <div class="form-row form-row-3">
+          <div class="form-group">
+            <div class="form-label">EDAD (años)</div>
+            <input type="number" id="reg-edad" placeholder="25" min="1" max="120"/>
+          </div>
+          <div class="form-group">
+            <div class="form-label">PESO (kg)</div>
+            <input type="number" id="reg-peso" placeholder="70.5" min="1" max="500" step="0.1"/>
+          </div>
+          <div class="form-group">
+            <div class="form-label">ESTATURA (cm)</div>
+            <input type="number" id="reg-estatura" placeholder="170" min="50" max="250"/>
+          </div>
+        </div>
+
+        <!-- SECCIÓN: SALUD -->
+        <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.8px;margin:18px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border);">⚕ INFORMACIÓN DE SALUD</div>
+        <div class="form-group">
+          <div class="form-label">PADECIMIENTOS O CONDICIONES MÉDICAS</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;" id="pad-chips"></div>
+          <div style="display:flex;gap:8px;">
+            <input id="pad-input" placeholder="Ej. Diabetes, hipertensión, lesión de rodilla..." style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();addPadecimiento();}"/>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="addPadecimiento()" style="white-space:nowrap;padding:9px 14px;">+ Agregar</button>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;">Presiona Enter o el botón para agregar. Esta información es confidencial.</div>
+        </div>
+
+        <!-- SECCIÓN: CONTACTO DE EMERGENCIA -->
+        <div style="font-size:10px;color:#ff6b2b;font-weight:700;letter-spacing:.8px;margin:18px 0 12px;padding-bottom:8px;border-bottom:1px solid #ff6b2b28;">🚨 CONTACTO DE EMERGENCIA</div>
+        <div style="background:#1a1212;border:1px solid #ff6b2b20;border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+          <div class="form-row form-row-2" style="margin-bottom:12px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <div class="form-label">NOMBRE COMPLETO *</div>
+              <input id="reg-ec-nombre" placeholder="Nombre del contacto"/>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <div class="form-label">PARENTESCO</div>
+              <select id="reg-ec-parentesco">
+                <option value="">— Seleccionar —</option>
+                <option value="Madre">Madre</option>
+                <option value="Padre">Padre</option>
+                <option value="Esposo/a">Esposo/a</option>
+                <option value="Hijo/a">Hijo/a</option>
+                <option value="Hermano/a">Hermano/a</option>
+                <option value="Amigo/a">Amigo/a</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group" style="margin-bottom:0;">
+              <div class="form-label">TELÉFONO *</div>
+              <input id="reg-ec-tel" placeholder="555-0000"/>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <div class="form-label">TELÉFONO ALTERNATIVO</div>
+              <input id="reg-ec-tel2" placeholder="555-0000 (opcional)"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN: MEMBRESÍA -->
+        <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.8px;margin:18px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border);">⊕ MEMBRESÍA</div>
+        <div class="form-row form-row-2">
+          <div class="form-group"><div class="form-label">TIPO DE MEMBRESÍA</div>
+            <select id="reg-tipo">
+              <option value="mensual">Mensual — $450</option>
+              <option value="trimestral">Trimestral — $1,200</option>
+              <option value="semestral">Semestral — $2,200</option>
+              <option value="anual">Anual — $4,000</option>
+            </select>
+          </div>
+          <div class="form-group"><div class="form-label">FECHA DE INICIO</div><input type="date" id="reg-inicio"/></div>
+        </div>
+
+        <div id="reg-preview" style="background:#1a1a1a;border-radius:8px;padding:12px 14px;border-left:3px solid var(--accent);margin-bottom:14px;display:none;">
+          <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:4px;">VISTA PREVIA</div>
+          <div id="reg-prev-name" style="font-size:14px;font-weight:600;"></div>
+          <div id="reg-prev-info" style="font-size:12px;color:var(--muted);"></div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:13px;" onclick="registrarCliente()">⊕ Registrar Cliente</button>
+      </div>
+      <div class="success-screen" id="reg-success">
+        <div class="check-circle">✓</div>
+        <div style="font-family:'Bebas Neue';font-size:22px;letter-spacing:1px;color:var(--success);">CLIENTE REGISTRADO</div>
+        <div style="color:var(--muted);font-size:13px;margin-top:4px;">El registro fue exitoso</div>
+        <button class="btn btn-ghost" style="margin-top:16px;" onclick="resetReg()">Registrar otro</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY PASS -->
+  <div class="page" id="page-daypass">
+    <div class="page-title">DAY PASS</div>
+    <div class="page-sub">Acceso de un día — $80 MXN</div>
+    <div class="card" style="max-width:460px;">
+      <div style="background:#e8ff4710;border:1px solid #e8ff4728;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+        <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:3px;">⚡ DAY PASS — 1 día de acceso</div>
+        <div style="font-size:12px;color:var(--muted);">Los datos se guardan para futuras promociones</div>
+      </div>
+      <div id="dp-form-wrap">
+        <div class="form-group"><div class="form-label">NOMBRE COMPLETO *</div><input id="dp-nombre" placeholder="Nombre del visitante"/></div>
+        <div class="form-group"><div class="form-label">TELÉFONO *</div><input id="dp-tel" placeholder="555-0000"/></div>
+        <div class="form-group"><div class="form-label">CORREO (opcional)</div><input type="email" id="dp-email" placeholder="correo@ejemplo.com"/></div>
+        <button class="btn btn-primary" style="width:100%;padding:13px;" onclick="registrarDayPass()">⚡ Registrar Day Pass</button>
+      </div>
+      <div class="success-screen" id="dp-success">
+        <div style="font-size:42px;margin-bottom:10px;">⚡</div>
+        <div style="font-family:'Bebas Neue';font-size:22px;color:var(--accent);">ACCESO CONCEDIDO</div>
+        <div style="color:var(--muted);font-size:13px;margin-top:4px;" id="dp-hour"></div>
+        <button class="btn btn-ghost" style="margin-top:16px;" onclick="resetDP()">Nuevo Day Pass</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERTAS -->
+  <div class="page" id="page-alertas">
+    <div class="page-title">ALERTAS</div>
+    <div class="page-sub">Clientes que requieren atención</div>
+    <div id="alertas-list"></div>
+    <div class="card" style="margin-top:20px;">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.6px;margin-bottom:12px;">💬 MENSAJES PARA ENVIAR</div>
+      <div id="msg-templates"></div>
+    </div>
+  </div>
+
+  <!-- CONFIG QR -->
+  <div class="page" id="page-config">
+    <div class="page-title">CONFIGURACIÓN QR</div>
+    <div class="page-sub">Define la URL donde subirás el sistema para generar los QR correctos</div>
+    <div class="card" style="max-width:560px;">
+      <div class="config-box">
+        <div class="config-title">¿CÓMO FUNCIONA?</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;">
+          1. Sube <strong style="color:var(--text)">checkin.html</strong> a tu hosting.<br>
+          2. Escribe aquí la URL completa donde quedó el archivo.<br>
+          3. Los QR de cada cliente apuntarán a esa URL con su ID.<br>
+          4. Al escanear → el cliente ve confirmación de entrada.
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">URL BASE DE TU HOSTING</div>
+        <input id="base-url" placeholder="https://tugimnasio.com/checkin.html" oninput="saveBaseUrl()"/>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+        El QR final se verá así: <span id="url-preview" style="color:var(--accent);font-family:monospace;"></span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.6px;margin-bottom:10px;">ARCHIVOS NECESARIOS EN TU SERVIDOR</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div style="background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:12px 16px;flex:1;min-width:200px;">
+          <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:4px;">admin-panel.html</div>
+          <div style="font-size:12px;color:var(--muted);">Este panel de administración</div>
+        </div>
+        <div style="background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:12px 16px;flex:1;min-width:200px;">
+          <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:4px;">checkin.html</div>
+          <div style="font-size:12px;color:var(--muted);">Página que ve el cliente al escanear</div>
+        </div>
+        <div style="background:#1a1a1a;border:1px solid var(--border);border-radius:8px;padding:12px 16px;flex:1;min-width:200px;">
+          <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:4px;">gym-data.json</div>
+          <div style="font-size:12px;color:var(--muted);">Base de datos compartida entre ambos</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;background:#ff6b2b10;border:1px solid #ff6b2b28;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:11px;color:var(--accent2);font-weight:700;margin-bottom:3px;">⚠ IMPORTANTE</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Para que el check-in funcione en tiempo real necesitas que tu hosting soporte PHP o Node.js para guardar datos. Si solo tienes HTML estático, los check-ins se mostrarán al cliente pero deberás registrarlos manualmente en el panel.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMAIL CONFIG -->
+  <div class="page" id="page-emailconfig">
+    <div class="page-title">CONFIG. CORREO</div>
+    <div class="page-sub">Configura EmailJS para enviar correos automáticos de bienvenida</div>
+    <div style="max-width:600px;display:flex;flex-direction:column;gap:14px;">
+
+      <!-- GUÍA PASOS -->
+      <div class="card">
+        <div style="font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.6px;margin-bottom:14px;">📋 GUÍA DE CONFIGURACIÓN — 5 PASOS</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#000;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
+            <div><div style="font-size:13px;font-weight:600;margin-bottom:2px;">Crea cuenta en EmailJS</div><div style="font-size:12px;color:var(--muted);">Ve a <a href="https://emailjs.com" target="_blank" style="color:var(--accent);">emailjs.com</a> → Sign Up gratis (200 correos/mes incluidos)</div></div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#000;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
+            <div><div style="font-size:13px;font-weight:600;margin-bottom:2px;">Conecta tu correo (Email Service)</div><div style="font-size:12px;color:var(--muted);">Email Services → Add New Service → elige Gmail u Outlook → conecta tu cuenta del gimnasio</div></div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#000;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
+            <div><div style="font-size:13px;font-weight:600;margin-bottom:2px;">Crea una plantilla (Email Template)</div><div style="font-size:12px;color:var(--muted);">Email Templates → Create New → pega el contenido del botón de abajo → guarda con nombre <strong style="color:var(--text)">gymtrack_bienvenida</strong></div></div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#000;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">4</div>
+            <div><div style="font-size:13px;font-weight:600;margin-bottom:2px;">Copia tus claves</div><div style="font-size:12px;color:var(--muted);">Account → API Keys copia tu <strong style="color:var(--text)">Public Key</strong>. Del servicio copia el <strong style="color:var(--text)">Service ID</strong>. De la plantilla copia el <strong style="color:var(--text)">Template ID</strong></div></div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:#000;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">5</div>
+            <div><div style="font-size:13px;font-weight:600;margin-bottom:2px;">Pega las claves abajo y prueba</div><div style="font-size:12px;color:var(--muted);">Llena los campos de abajo, guarda, y cada nuevo cliente recibirá su correo automáticamente al registrarse</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PLANTILLA SUGERIDA -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.6px;">📄 PLANTILLA DE CORREO (pegar en EmailJS)</div>
+          <button class="btn btn-ghost btn-sm" onclick="copyTemplate()">Copiar plantilla</button>
+        </div>
+        <div style="background:#111;border:1px solid var(--border);border-radius:8px;padding:14px;font-size:11px;color:var(--muted);font-family:monospace;line-height:1.7;max-height:200px;overflow-y:auto;" id="template-preview">
+          <strong style="color:var(--accent);">To:</strong> {{to_email}}<br>
+          <strong style="color:var(--accent);">Subject:</strong> Bienvenido a {{gym_nombre}} — Confirmación de inscripción<br><br>
+          Estimado/a {{nombre}},<br><br>
+          Nos complace confirmar tu inscripción en <strong>{{gym_nombre}}</strong>.<br><br>
+          <strong>DETALLES DE TU MEMBRESÍA:</strong><br>
+          • Tipo: {{tipo_membresia}}<br>
+          • Fecha de inicio: {{fecha_inicio}}<br>
+          • Fecha de vencimiento: {{fecha_vence}}<br>
+          • Folio: {{folio}}<br><br>
+          <strong>AUTORIZACIÓN DE USO DE DATOS PERSONALES</strong><br>
+          De conformidad con la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP), {{gym_nombre}} informa que los datos personales proporcionados durante tu inscripción (nombre, teléfono, correo electrónico, domicilio, datos de salud y contacto de emergencia) serán utilizados exclusivamente para:<br>
+          (a) Administrar tu membresía y acceso a las instalaciones;<br>
+          (b) Enviarte avisos sobre vencimiento de membresía y promociones;<br>
+          (c) Contactar a tu persona de emergencia en caso de accidente dentro de las instalaciones.<br><br>
+          Tus datos NO serán compartidos con terceros sin tu consentimiento. Tienes derecho de Acceso, Rectificación, Cancelación u Oposición (ARCO) contactando a {{gym_email}}.<br><br>
+          Al hacer uso de nuestras instalaciones confirmas haber leído y aceptado este aviso.<br><br>
+          ¡Bienvenido/a a nuestra comunidad! 💪<br><br>
+          Atentamente,<br>
+          <strong>{{gym_nombre}}</strong><br>
+          {{gym_telefono}}
+        </div>
+      </div>
+
+      <!-- CLAVES EMAILJS -->
+      <div class="card">
+        <div style="font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.6px;margin-bottom:14px;">🔑 CLAVES DE EMAILJS</div>
+        <div class="form-group"><div class="form-label">PUBLIC KEY (Account → API Keys)</div><input id="ejs-pubkey" placeholder="user_xxxxxxxxxxxxxxxxxxxx" oninput="saveEmailConfig()"/></div>
+        <div class="form-row form-row-2">
+          <div class="form-group"><div class="form-label">SERVICE ID</div><input id="ejs-service" placeholder="service_xxxxxxx" oninput="saveEmailConfig()"/></div>
+          <div class="form-group"><div class="form-label">TEMPLATE ID</div><input id="ejs-template" placeholder="template_xxxxxxx" oninput="saveEmailConfig()"/></div>
+        </div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.6px;margin:14px 0 10px;">🏋️ DATOS DE TU GIMNASIO (para el correo)</div>
+        <div class="form-row form-row-2">
+          <div class="form-group"><div class="form-label">NOMBRE DEL GIMNASIO</div><input id="ejs-gymnom" placeholder="Gym Power" oninput="saveEmailConfig()"/></div>
+          <div class="form-group"><div class="form-label">CORREO DEL GIMNASIO</div><input type="email" id="ejs-gymemail" placeholder="info@tugimnasio.com" oninput="saveEmailConfig()"/></div>
+        </div>
+        <div class="form-group"><div class="form-label">TELÉFONO DEL GIMNASIO</div><input id="ejs-gymtel" placeholder="555-0000" oninput="saveEmailConfig()"/></div>
+        <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="testEmail()" style="flex:1;">✉ Enviar correo de prueba a mi correo</button>
+          <div id="email-test-msg" style="font-size:12px;padding:8px 0;"></div>
+        </div>
+        <div id="email-status" style="margin-top:10px;font-size:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODAL PERFIL -->
+<div class="modal-overlay" id="perfil-modal">
+  <div class="modal" style="max-width:500px;">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:16px;">
+      <div>
+        <div class="modal-title" id="perfil-nombre"></div>
+        <div id="perfil-badge" style="margin-top:4px;"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('perfil-modal')">✕</button>
+    </div>
+    <!-- DATOS PERSONALES -->
+    <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.7px;margin-bottom:10px;">◉ DATOS PERSONALES</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;">
+        <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:3px;">TELÉFONO</div>
+        <div style="font-size:13px;font-weight:500;" id="p-tel">—</div>
+      </div>
+      <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;">
+        <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:3px;">CORREO</div>
+        <div style="font-size:12px;font-weight:500;word-break:break-all;" id="p-email">—</div>
+      </div>
+      <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;">
+        <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:3px;">SEXO</div>
+        <div style="font-size:13px;font-weight:500;" id="p-sexo">—</div>
+      </div>
+    </div>
+    <!-- DOMICILIO -->
+    <div style="background:#1a1a1a;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;gap:8px;align-items:flex-start;">
+      <span style="font-size:14px;margin-top:1px;">📍</span>
+      <div>
+        <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:3px;">DOMICILIO</div>
+        <div style="font-size:12px;font-weight:500;line-height:1.6;" id="p-domicilio">—</div>
+      </div>
+    </div>
+    <!-- DATOS FÍSICOS -->
+    <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.7px;margin-bottom:10px;">◈ DATOS FÍSICOS</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;text-align:center;">
+        <div style="font-size:20px;font-family:'Bebas Neue';color:var(--accent);" id="p-edad">—</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">AÑOS</div>
+      </div>
+      <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;text-align:center;">
+        <div style="font-size:20px;font-family:'Bebas Neue';color:var(--accent);" id="p-peso">—</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">KG</div>
+      </div>
+      <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;text-align:center;">
+        <div style="font-size:20px;font-family:'Bebas Neue';color:var(--accent);" id="p-estatura">—</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">CM</div>
+      </div>
+      <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;text-align:center;">
+        <div style="font-size:20px;font-family:'Bebas Neue';color:var(--accent);" id="p-imc">—</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">IMC</div>
+      </div>
+    </div>
+    <!-- SALUD -->
+    <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.7px;margin-bottom:10px;">⚕ PADECIMIENTOS</div>
+    <div id="p-padecimientos" style="background:#1a1a1a;border-radius:8px;padding:12px 14px;font-size:13px;color:var(--muted);margin-bottom:16px;">Ninguno registrado</div>
+    <!-- EMERGENCIA -->
+    <div style="font-size:10px;color:#ff6b2b;font-weight:700;letter-spacing:.7px;margin-bottom:10px;">🚨 CONTACTO DE EMERGENCIA</div>
+    <div id="p-emergencia" style="background:#1a1212;border:1px solid #ff6b2b20;border-radius:8px;padding:14px 16px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:3px;">NOMBRE</div>
+          <div style="font-size:13px;font-weight:600;" id="p-ec-nombre">—</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:3px;">PARENTESCO</div>
+          <div style="font-size:13px;font-weight:500;" id="p-ec-parentesco">—</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:3px;">TELÉFONO</div>
+          <div style="font-size:14px;font-weight:700;color:#ff8c60;" id="p-ec-tel">—</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:3px;">TEL. ALTERNATIVO</div>
+          <div style="font-size:13px;font-weight:500;color:#ff8c60;" id="p-ec-tel2">—</div>
+        </div>
+      </div>
+    </div>
+    <!-- MEMBRESÍA -->
+    <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.7px;margin-bottom:10px;">⊕ MEMBRESÍA</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;">
+        <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:3px;">TIPO</div>
+        <div style="font-size:13px;font-weight:500;" id="p-tipo">—</div>
+      </div>
+      <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;">
+        <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:3px;">INICIO</div>
+        <div style="font-size:13px;font-weight:500;" id="p-inicio">—</div>
+      </div>
+      <div style="background:#1a1a1a;border-radius:8px;padding:10px 12px;">
+        <div style="font-size:10px;color:var(--muted);font-weight:600;margin-bottom:3px;">VENCE</div>
+        <div style="font-size:13px;font-weight:500;" id="p-vence">—</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" style="flex:1;" onclick="closeModal('perfil-modal')">Cerrar</button>
+      <button class="btn btn-primary" style="flex:1;" id="p-qr-btn">📱 Ver QR</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL QR -->
+<div class="modal-overlay" id="qr-modal">
+  <div class="modal qr-modal">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:4px;">
+      <div class="modal-title">CÓDIGO QR</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('qr-modal')">✕</button>
+    </div>
+    <div class="modal-sub" id="qr-modal-sub">Código de acceso del cliente</div>
+    <div id="qr-canvas-wrap"></div>
+    <div class="qr-client-name" id="qr-client-name"></div>
+    <div class="qr-url" id="qr-url-show"></div>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <button class="btn btn-primary btn-sm" onclick="printQR()">🖨 Imprimir QR</button>
+      <button class="btn btn-ghost btn-sm" onclick="downloadQR()">⬇ Descargar</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('qr-modal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RENOVAR -->
+<div class="modal-overlay" id="ren-modal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:4px;">
+      <div class="modal-title">RENOVAR MEMBRESÍA</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('ren-modal')">✕</button>
+    </div>
+    <div class="modal-sub" id="ren-name"></div>
+    <div class="form-group">
+      <div class="form-label">TIPO DE MEMBRESÍA</div>
+      <select id="ren-tipo">
+        <option value="mensual">Mensual — $450</option>
+        <option value="trimestral">Trimestral — $1,200</option>
+        <option value="semestral">Semestral — $2,200</option>
+        <option value="anual">Anual — $4,000</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="confirmarRenovar()">↻ Confirmar Renovación</button>
+      <button class="btn btn-ghost" onclick="closeModal('ren-modal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+const SERVICES = {
+  mensual:    {label:'Mensual',    precio:450,  dias:30},
+  trimestral: {label:'Trimestral', precio:1200, dias:90},
+  semestral:  {label:'Semestral',  precio:2200, dias:180},
+  anual:      {label:'Anual',      precio:4000, dias:365},
+  daypass:    {label:'Day Pass',   precio:80,   dias:1},
+};
+
+function loadData(){
+  const d = localStorage.getItem('gymtrack_data');
+  if(d) return JSON.parse(d);
+  const today = todayStr();
+  return {
+    clientes:[
+      {id:1,nombre:'Carlos Méndez',telefono:'555-1234',email:'carlos@mail.com',tipo:'mensual',inicio:today,vence:addDays(today,30),foto:'CM'},
+      {id:2,nombre:'Sofía Ramírez',telefono:'555-5678',email:'sofia@mail.com',tipo:'anual',inicio:'2026-01-15',vence:addDays('2026-01-15',365),foto:'SR'},
+      {id:3,nombre:'Miguel Torres',telefono:'555-9012',email:'miguel@mail.com',tipo:'mensual',inicio:addDays(today,-20),vence:addDays(today,10),foto:'MT'},
+    ],
+    asistencias:[
+      {id:1,clienteId:1,fecha:today,hora:'08:30',tipo:'entrada'},
+      {id:2,clienteId:2,fecha:today,hora:'09:15',tipo:'entrada'},
+    ],
+    nextId:100
+  };
+}
+
+let DB = loadData();
+function save(){ localStorage.setItem('gymtrack_data',JSON.stringify(DB)); }
+
+// ─── UTILS ──────────────────────────────────────────────────────────────────
+function todayStr(){ return new Date().toISOString().split('T')[0]; }
+function addDays(d,n){ const dt=new Date(d); dt.setDate(dt.getDate()+n); return dt.toISOString().split('T')[0]; }
+function diasRestantes(v){ return Math.ceil((new Date(v)-new Date(todayStr()))/86400000); }
+function statusCliente(c){
+  if(c.tipo==='daypass') return 'daypass';
+  const d=diasRestantes(c.vence);
+  if(d<0) return 'expired';
+  if(d<=5) return 'warning';
+  return 'active';
+}
+function badgeHtml(s){
+  const map={active:['b-active','● Activo'],expired:['b-expired','✕ Vencido'],warning:['b-warn','⚠ Por vencer'],daypass:['b-day','⚡ Day Pass']};
+  const [c,l]=map[s]||map.active;
+  return `<span class="badge ${c}">${l}</span>`;
+}
+function avatarColor(s){ return {active:'#e8ff47',expired:'#ff4444',warning:'#ff6b2b',daypass:'#e8ff47'}[s]; }
+function initials(n){ return n.split(' ').map(x=>x[0]||'').join('').slice(0,2).toUpperCase(); }
+function nowTime(){ return new Date().toTimeString().slice(0,5); }
+
+// ─── NAV ────────────────────────────────────────────────────────────────────
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(id==='dashboard') renderDashboard();
+  if(id==='clientes') renderClientes();
+  if(id==='asistencias') initAsistencias();
+  if(id==='registro') initReg();
+  if(id==='alertas') renderAlertas();
+  if(id==='config') initConfig();
+  if(id==='emailconfig') initEmailConfig();
+}
+
+// ─── DASHBOARD ──────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const hoy=todayStr();
+  const asHoy=DB.asistencias.filter(a=>a.fecha===hoy).length;
+  const activos=DB.clientes.filter(c=>statusCliente(c)==='active').length;
+  const alerts=getAlerts();
+  document.getElementById('s-total').textContent=DB.clientes.length;
+  document.getElementById('s-active').textContent=activos;
+  document.getElementById('s-hoy').textContent=asHoy;
+  document.getElementById('s-alerts').textContent=alerts.length;
+
+  // vencer
+  const vDiv=document.getElementById('dash-vencer');
+  const prox=DB.clientes.filter(c=>['warning','expired'].includes(statusCliente(c)));
+  if(!prox.length){vDiv.innerHTML='<p style="color:var(--muted);font-size:13px;">Sin vencimientos próximos 🎉</p>';}
+  else vDiv.innerHTML=prox.map(c=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div><div style="font-size:13px;font-weight:500;">${c.nombre}</div><div style="font-size:11px;color:var(--muted);">${c.telefono}</div></div>
+      ${badgeHtml(statusCliente(c))}
+    </div>`).join('');
+
+  // recientes
+  const rDiv=document.getElementById('dash-recent');
+  const rec=[...DB.asistencias].sort((a,b)=>b.id-a.id).slice(0,5);
+  rDiv.innerHTML=rec.map(a=>{
+    const c=DB.clientes.find(cl=>cl.id===a.clienteId);
+    return `<div class="log-item">
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div class="avatar" style="background:var(--accent);font-size:11px;">${c?.foto||'⚡'}</div>
+        <div><div style="font-size:13px;font-weight:500;">${c?.nombre||'Day Pass'}</div>
+        <div style="font-size:11px;color:var(--muted);">${a.fecha}</div></div>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:var(--accent);font-family:monospace;">${a.hora}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── CLIENTES ───────────────────────────────────────────────────────────────
+function renderClientes(){
+  const q=(document.getElementById('search-input')?.value||'').toLowerCase();
+  const filtered=DB.clientes.filter(c=>
+    c.nombre.toLowerCase().includes(q)||
+    c.telefono.includes(q)||
+    (c.email||'').toLowerCase().includes(q)
+  );
+  document.getElementById('clientes-sub').textContent=`${DB.clientes.length} clientes registrados`;
+  const tbody=document.getElementById('clientes-tbody');
+  tbody.innerHTML=filtered.map(c=>{
+    const s=statusCliente(c); const d=diasRestantes(c.vence);
+    return `<tr>
+      <td><div style="display:flex;gap:10px;align-items:center;">
+        <div class="avatar" style="background:${avatarColor(s)};">${c.foto}</div>
+        <div>
+          <div style="font-weight:500;font-size:13px;">${c.nombre}</div>
+          ${c.sexo?`<div style="font-size:11px;color:var(--muted);">${c.sexo}${c.edad?' · '+c.edad+' años':''}</div>`:''}
+        </div>
+      </div></td>
+      <td><div style="font-size:12px;">${c.telefono}</div><div style="font-size:11px;color:var(--muted);">${c.email||'—'}</div></td>
+      <td><span style="font-size:12px;color:var(--muted);">${SERVICES[c.tipo]?.label||c.tipo}</span></td>
+      <td><div style="font-size:12px;">${c.tipo==='daypass'?'Hoy':c.vence}</div>
+        <div style="font-size:11px;color:${d<0?'var(--danger)':d<=5?'var(--accent2)':'var(--muted)'};">${c.tipo==='daypass'?'':d<0?`Vencido ${Math.abs(d)}d`:d===0?'Vence hoy':`${d}d restantes`}</div></td>
+      <td>${badgeHtml(s)}</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="showPerfil(${c.id})">👤 Perfil</button>
+          <button class="btn btn-ghost btn-sm" onclick="showQR(${c.id})">📱 QR</button>
+          ${c.tipo!=='daypass'?`<button class="btn btn-ghost btn-sm" onclick="openRenovar(${c.id})">↻</button>`:''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── ASISTENCIAS ────────────────────────────────────────────────────────────
+function initAsistencias(){
+  const sel=document.getElementById('asist-cliente');
+  sel.innerHTML='<option value="">Seleccionar cliente...</option>';
+  DB.clientes.filter(c=>c.tipo!=='daypass').forEach(c=>{
+    sel.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`;
+  });
+  document.getElementById('asist-fecha').value=todayStr();
+  document.getElementById('asist-hora').value=nowTime();
+  document.getElementById('filtro-fecha').value=todayStr();
+  renderAsistencias();
+}
+
+function registrarAsistencia(){
+  const cId=parseInt(document.getElementById('asist-cliente').value);
+  const fecha=document.getElementById('asist-fecha').value;
+  const hora=document.getElementById('asist-hora').value;
+  if(!cId||!fecha||!hora) return;
+  DB.asistencias.push({id:DB.nextId++,clienteId:cId,fecha,hora,tipo:'entrada'});
+  save();
+  const msg=document.getElementById('asist-msg');
+  msg.textContent='✓ Asistencia registrada'; msg.style.display='block';
+  setTimeout(()=>msg.style.display='none',2500);
+  renderAsistencias(); updateAlertBadge();
+}
+
+function renderAsistencias(){
+  const fecha=document.getElementById('filtro-fecha')?.value||todayStr();
+  const filtered=DB.asistencias.filter(a=>a.fecha===fecha);
+  const div=document.getElementById('asist-list');
+  if(!filtered.length){div.innerHTML='<p style="color:var(--muted);font-size:13px;padding:10px 0;">Sin asistencias en esta fecha.</p>';return;}
+  div.innerHTML=filtered.map(a=>{
+    const c=DB.clientes.find(cl=>cl.id===a.clienteId);
+    return `<div class="log-item">
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div class="avatar" style="background:var(--accent);font-size:11px;">${c?.foto||'⚡'}</div>
+        <div><div style="font-size:13px;font-weight:500;">${c?.nombre||'Day Pass'}</div>
+        <div style="font-size:11px;color:var(--muted);">${SERVICES[c?.tipo]?.label||''}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:13px;font-weight:600;color:var(--accent);font-family:monospace;">${a.hora}</span>
+        <span class="badge b-active">Entrada</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── REGISTRO ───────────────────────────────────────────────────────────────
+let padecimientos=[];
+
+function addPadecimiento(){
+  const inp=document.getElementById('pad-input');
+  const val=inp.value.trim();
+  if(!val) return;
+  padecimientos.push(val);
+  inp.value='';
+  renderPadChips();
+}
+
+function removePad(i){
+  padecimientos.splice(i,1);
+  renderPadChips();
+}
+
+function renderPadChips(){
+  const wrap=document.getElementById('pad-chips');
+  if(!wrap) return;
+  wrap.innerHTML=padecimientos.map((p,i)=>`
+    <span style="display:inline-flex;align-items:center;gap:5px;background:#2a1a1a;border:1px solid #ff444430;border-radius:20px;padding:3px 10px 3px 12px;font-size:12px;color:#ff8888;">
+      ${p}
+      <button onclick="removePad(${i})" style="background:none;border:none;color:#ff6666;font-size:13px;padding:0 2px;line-height:1;cursor:pointer;">×</button>
+    </span>`).join('');
+}
+
+function initReg(){
+  document.getElementById('reg-inicio').value=todayStr();
+  padecimientos=[];
+  renderPadChips();
+  const n=document.getElementById('reg-nombre');
+  const t=document.getElementById('reg-tipo');
+  const i=document.getElementById('reg-inicio');
+  function updatePreview(){
+    const name=n.value.trim();
+    if(!name){document.getElementById('reg-preview').style.display='none';return;}
+    const svc=SERVICES[t.value];
+    document.getElementById('reg-preview').style.display='block';
+    document.getElementById('reg-prev-name').textContent=name;
+    document.getElementById('reg-prev-info').textContent=`${svc.label} — Vence: ${addDays(i.value||todayStr(),svc.dias)}`;
+  }
+  n.oninput=updatePreview; t.oninput=updatePreview; i.oninput=updatePreview;
+}
+
+function registrarCliente(){
+  const nombre=document.getElementById('reg-nombre').value.trim();
+  const tel=document.getElementById('reg-tel').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const sexo=document.getElementById('reg-sexo').value;
+  const edad=document.getElementById('reg-edad').value;
+  const peso=document.getElementById('reg-peso').value;
+  const estatura=document.getElementById('reg-estatura').value;
+  // Domicilio
+  const calle=document.getElementById('reg-calle').value.trim();
+  const colonia=document.getElementById('reg-colonia').value.trim();
+  const ciudad=document.getElementById('reg-ciudad').value.trim();
+  const cp=document.getElementById('reg-cp').value.trim();
+  const estado=document.getElementById('reg-estado').value;
+  const referencias=document.getElementById('reg-referencias').value.trim();
+  // Emergencia
+  const ecNombre=document.getElementById('reg-ec-nombre').value.trim();
+  const ecParentesco=document.getElementById('reg-ec-parentesco').value;
+  const ecTel=document.getElementById('reg-ec-tel').value.trim();
+  const ecTel2=document.getElementById('reg-ec-tel2').value.trim();
+  const tipo=document.getElementById('reg-tipo').value;
+  const inicio=document.getElementById('reg-inicio').value||todayStr();
+  if(!nombre||!tel) return;
+  const svc=SERVICES[tipo];
+  const vence=addDays(inicio,svc.dias);
+  const newCliente={
+    id:DB.nextId++,nombre,telefono:tel,email,sexo,
+    edad:edad?parseInt(edad):null,
+    peso:peso?parseFloat(peso):null,
+    estatura:estatura?parseInt(estatura):null,
+    padecimientos:[...padecimientos],
+    domicilio:{calle,colonia,ciudad,cp,estado,referencias},
+    emergencia:{nombre:ecNombre,parentesco:ecParentesco,telefono:ecTel,telefono2:ecTel2},
+    tipo,inicio,vence,foto:initials(nombre)
+  };
+  DB.clientes.push(newCliente);
+  save(); updateAlertBadge();
+
+  // Enviar correo de bienvenida si hay email y EmailJS configurado
+  if(email) enviarCorreoBienvenida(newCliente,svc,vence);
+
+  document.getElementById('reg-form-wrap').style.display='none';
+  document.getElementById('reg-success').classList.add('show');
+}
+
+function resetReg(){
+  document.getElementById('reg-form-wrap').style.display='block';
+  document.getElementById('reg-success').classList.remove('show');
+  ['reg-nombre','reg-tel','reg-email','reg-sexo','reg-edad','reg-peso','reg-estatura',
+   'reg-calle','reg-colonia','reg-ciudad','reg-cp','reg-estado','reg-referencias',
+   'reg-ec-nombre','reg-ec-parentesco','reg-ec-tel','reg-ec-tel2'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  padecimientos=[];
+  renderPadChips();
+  document.getElementById('reg-preview').style.display='none';
+}
+
+// ─── DAY PASS ───────────────────────────────────────────────────────────────
+function registrarDayPass(){
+  const nombre=document.getElementById('dp-nombre').value.trim();
+  const tel=document.getElementById('dp-tel').value.trim();
+  const email=document.getElementById('dp-email').value.trim();
+  if(!nombre||!tel) return;
+  const cId=DB.nextId++;
+  DB.clientes.push({id:cId,nombre,telefono:tel,email,tipo:'daypass',inicio:todayStr(),vence:todayStr(),foto:initials(nombre)});
+  DB.asistencias.push({id:DB.nextId++,clienteId:cId,fecha:todayStr(),hora:nowTime(),tipo:'entrada'});
+  save(); updateAlertBadge();
+  document.getElementById('dp-form-wrap').style.display='none';
+  const suc=document.getElementById('dp-success');
+  document.getElementById('dp-hour').textContent=`Day Pass registrado · ${nowTime()}`;
+  suc.classList.add('show');
+}
+
+function resetDP(){
+  document.getElementById('dp-form-wrap').style.display='block';
+  document.getElementById('dp-success').classList.remove('show');
+  document.getElementById('dp-nombre').value='';
+  document.getElementById('dp-tel').value='';
+  document.getElementById('dp-email').value='';
+}
+
+// ─── ALERTAS ────────────────────────────────────────────────────────────────
+function getAlerts(){
+  const alerts=[];
+  DB.clientes.forEach(c=>{
+    if(c.tipo==='daypass') return;
+    const d=diasRestantes(c.vence);
+    if(d>=0&&d<=5) alerts.push({clienteId:c.id,tipo:'warning',dias:d,msg:`Vence en ${d} día${d!==1?'s':''}`});
+    else if(d<0) alerts.push({clienteId:c.id,tipo:'danger',dias:d,msg:`Vencido hace ${Math.abs(d)} día${Math.abs(d)!==1?'s':''}`});
+  });
+  return alerts;
+}
+
+function updateAlertBadge(){
+  const a=getAlerts(); const b=document.getElementById('alert-badge');
+  if(a.length){b.style.display='inline';b.textContent=a.length;}
+  else b.style.display='none';
+}
+
+function renderAlertas(){
+  const alerts=getAlerts();
+  const div=document.getElementById('alertas-list');
+  if(!alerts.length){
+    div.innerHTML=`<div class="card" style="text-align:center;padding:40px;"><div style="font-size:32px;margin-bottom:10px;">✓</div><div style="font-weight:600;margin-bottom:4px;">Todo en orden</div><div style="color:var(--muted);font-size:13px;">No hay membresías por vencer</div></div>`;
+  } else {
+    div.innerHTML=alerts.map(a=>{
+      const c=DB.clientes.find(cl=>cl.id===a.clienteId);
+      return `<div class="alert-item ${a.tipo}" style="margin-bottom:10px;">
+        <div><div style="font-size:14px;font-weight:600;">${c.nombre}</div>
+        <div style="font-size:12px;color:${a.tipo==='danger'?'var(--danger)':'var(--accent2)'};">${a.msg}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Tel: ${c.telefono}${c.email?' · '+c.email:''}</div></div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <select id="ren-sel-${c.id}" style="width:auto;font-size:12px;">
+            <option value="mensual">Mensual $450</option>
+            <option value="trimestral">Trimestral $1,200</option>
+            <option value="semestral">Semestral $2,200</option>
+            <option value="anual">Anual $4,000</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="renovarDesdeAlerta(${c.id})">↻ Renovar</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const msgs=[
+    {label:'Vencimiento próximo',txt:'Hola [nombre], te recordamos que tu membresía vence el [fecha]. ¡Renuévala para seguir entrenando sin interrupciones! 💪'},
+    {label:'Membresía vencida',txt:'Hola [nombre], tu membresía ha vencido. Renuévala hoy y obtén un descuento especial. ¡Te esperamos! 🏋️'},
+    {label:'Promoción',txt:'¡Hola [nombre]! Tenemos una promoción especial este mes. ¡No te la pierdas antes del [fecha]! 🎉'},
+  ];
+  document.getElementById('msg-templates').innerHTML=msgs.map(m=>`
+    <div style="background:#1a1a1a;border-radius:8px;padding:12px 14px;margin-bottom:10px;">
+      <div style="font-size:11px;color:var(--accent);font-weight:700;margin-bottom:6px;">${m.label}</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.6;">${m.txt}</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="navigator.clipboard&&navigator.clipboard.writeText('${m.txt.replace(/'/g,"\\'")}')">Copiar</button>
+    </div>`).join('');
+}
+
+function renovarDesdeAlerta(id){
+  const tipo=document.getElementById('ren-sel-'+id)?.value||'mensual';
+  renovar(id,tipo); renderAlertas(); updateAlertBadge();
+}
+
+// ─── RENOVAR ────────────────────────────────────────────────────────────────
+let renovarId=null;
+function openRenovar(id){
+  renovarId=id;
+  const c=DB.clientes.find(cl=>cl.id===id);
+  document.getElementById('ren-name').textContent=c.nombre+' — '+SERVICES[c.tipo].label;
+  document.getElementById('ren-modal').classList.add('open');
+}
+function confirmarRenovar(){
+  const tipo=document.getElementById('ren-tipo').value;
+  renovar(renovarId,tipo);
+  closeModal('ren-modal'); renderClientes(); updateAlertBadge();
+}
+function renovar(id,tipo){
+  const svc=SERVICES[tipo];
+  DB.clientes=DB.clientes.map(c=>{
+    if(c.id!==id) return c;
+    const base=diasRestantes(c.vence)<0?todayStr():c.vence;
+    return {...c,tipo,vence:addDays(base,svc.dias),inicio:todayStr()};
+  });
+  save();
+}
+
+// ─── PERFIL ──────────────────────────────────────────────────────────────────
+function showPerfil(id){
+  const c=DB.clientes.find(cl=>cl.id===id);
+  if(!c) return;
+  const s=statusCliente(c);
+  document.getElementById('perfil-nombre').textContent=c.nombre;
+  document.getElementById('perfil-badge').innerHTML=badgeHtml(s);
+  document.getElementById('p-tel').textContent=c.telefono||'—';
+  document.getElementById('p-email').textContent=c.email||'—';
+  document.getElementById('p-sexo').textContent=c.sexo||'—';
+  // Domicilio
+  const dom=c.domicilio||{};
+  const domParts=[dom.calle,dom.colonia,dom.ciudad,dom.estado,dom.cp].filter(Boolean);
+  document.getElementById('p-domicilio').innerHTML=domParts.length
+    ? domParts.join(', ')+(dom.referencias?`<br><span style="color:var(--muted);">Ref: ${dom.referencias}</span>`:'')
+    :'<span style="color:var(--muted);">No registrado</span>';
+  document.getElementById('p-edad').textContent=c.edad||'—';
+  document.getElementById('p-peso').textContent=c.peso||'—';
+  document.getElementById('p-estatura').textContent=c.estatura||'—';
+  // IMC
+  const imc=(c.peso&&c.estatura)?((c.peso/((c.estatura/100)**2)).toFixed(1)):'—';
+  document.getElementById('p-imc').textContent=imc;
+  // Padecimientos
+  const pads=c.padecimientos||[];
+  document.getElementById('p-padecimientos').innerHTML=pads.length
+    ?pads.map(p=>`<span style="display:inline-flex;align-items:center;background:#2a1a1a;border:1px solid #ff444428;border-radius:16px;padding:3px 10px;font-size:12px;color:#ff8888;margin:2px 4px 2px 0;">${p}</span>`).join('')
+    :'<span style="color:var(--muted);">Ninguno registrado</span>';
+  // Emergencia
+  const ec=c.emergencia||{};
+  document.getElementById('p-ec-nombre').textContent=ec.nombre||'No registrado';
+  document.getElementById('p-ec-parentesco').textContent=ec.parentesco||'—';
+  document.getElementById('p-ec-tel').textContent=ec.telefono||'—';
+  document.getElementById('p-ec-tel2').textContent=ec.telefono2||'—';
+  document.getElementById('p-tipo').textContent=SERVICES[c.tipo]?.label||c.tipo;
+  document.getElementById('p-inicio').textContent=c.inicio||'—';
+  document.getElementById('p-vence').textContent=c.vence||'—';
+  document.getElementById('p-qr-btn').onclick=()=>{closeModal('perfil-modal');showQR(id);};
+  document.getElementById('perfil-modal').classList.add('open');
+}
+
+// ─── QR ─────────────────────────────────────────────────────────────────────
+let currentQRClient=null;
+function showQR(id){
+  const c=DB.clientes.find(cl=>cl.id===id);
+  currentQRClient=c;
+  const baseUrl=localStorage.getItem('gymtrack_baseurl')||'https://tugimnasio.com/checkin.html';
+  const url=`${baseUrl}?id=${c.id}&nombre=${encodeURIComponent(c.nombre)}`;
+  document.getElementById('qr-client-name').textContent=c.nombre;
+  document.getElementById('qr-modal-sub').textContent=SERVICES[c.tipo]?.label||c.tipo;
+  document.getElementById('qr-url-show').textContent=url;
+  const wrap=document.getElementById('qr-canvas-wrap');
+  wrap.innerHTML='';
+  new QRCode(wrap,{text:url,width:200,height:200,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H});
+  document.getElementById('qr-modal').classList.add('open');
+}
+
+function downloadQR(){
+  const canvas=document.querySelector('#qr-canvas-wrap canvas');
+  if(!canvas) return;
+  const a=document.createElement('a');
+  a.download=`QR-${currentQRClient.nombre.replace(/ /g,'_')}.png`;
+  a.href=canvas.toDataURL(); a.click();
+}
+
+function printQR(){
+  const canvas=document.querySelector('#qr-canvas-wrap canvas');
+  if(!canvas) return;
+  const win=window.open('','_blank');
+  win.document.write(`<html><body style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;background:#fff;">
+    <img src="${canvas.toDataURL()}" style="width:260px;height:260px;border-radius:12px;border:4px solid #000;"/>
+    <h2 style="margin-top:16px;font-size:22px;">${currentQRClient.nombre}</h2>
+    <p style="color:#666;font-size:14px;">${SERVICES[currentQRClient.tipo]?.label||''} — GYMTRACK</p>
+    <script>window.print();window.close();<\/script>
+  </body></html>`);
+}
+
+// ─── CONFIG ─────────────────────────────────────────────────────────────────
+function initConfig(){
+  const saved=localStorage.getItem('gymtrack_baseurl')||'';
+  document.getElementById('base-url').value=saved;
+  updateUrlPreview();
+}
+function saveBaseUrl(){
+  const v=document.getElementById('base-url').value.trim();
+  localStorage.setItem('gymtrack_baseurl',v);
+  updateUrlPreview();
+}
+function updateUrlPreview(){
+  const v=document.getElementById('base-url').value.trim()||'https://tugimnasio.com/checkin.html';
+  document.getElementById('url-preview').textContent=v+'?id=123&nombre=Cliente';
+}
+
+// ─── EMAILJS ─────────────────────────────────────────────────────────────────
+function getEmailCfg(){ return JSON.parse(localStorage.getItem('gymtrack_email')||'{}'); }
+
+function saveEmailConfig(){
+  const cfg={
+    pubkey:document.getElementById('ejs-pubkey').value.trim(),
+    service:document.getElementById('ejs-service').value.trim(),
+    template:document.getElementById('ejs-template').value.trim(),
+    gymNombre:document.getElementById('ejs-gymnom').value.trim(),
+    gymEmail:document.getElementById('ejs-gymemail').value.trim(),
+    gymTel:document.getElementById('ejs-gymtel').value.trim(),
+  };
+  localStorage.setItem('gymtrack_email',JSON.stringify(cfg));
+  const st=document.getElementById('email-status');
+  if(st) st.innerHTML='<span style="color:var(--success);">✓ Configuración guardada</span>';
+}
+
+function initEmailConfig(){
+  const cfg=getEmailCfg();
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
+  set('ejs-pubkey',cfg.pubkey); set('ejs-service',cfg.service);
+  set('ejs-template',cfg.template); set('ejs-gymnom',cfg.gymNombre);
+  set('ejs-gymemail',cfg.gymEmail); set('ejs-gymtel',cfg.gymTel);
+}
+
+function copyTemplate(){
+  const txt=`Estimado/a {{nombre}},\n\nNos complace confirmar tu inscripción en {{gym_nombre}}.\n\nDETALLES DE TU MEMBRESÍA:\n• Tipo: {{tipo_membresia}}\n• Fecha de inicio: {{fecha_inicio}}\n• Fecha de vencimiento: {{fecha_vence}}\n• Folio: {{folio}}\n\nAUTORIZACIÓN DE USO DE DATOS PERSONALES\nDe conformidad con la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP), {{gym_nombre}} informa que los datos personales proporcionados durante tu inscripción serán utilizados exclusivamente para:\n(a) Administrar tu membresía y acceso a las instalaciones;\n(b) Enviarte avisos sobre vencimiento de membresía y promociones;\n(c) Contactar a tu persona de emergencia en caso de accidente dentro de las instalaciones.\n\nTus datos NO serán compartidos con terceros sin tu consentimiento. Tienes derecho ARCO contactando a {{gym_email}}.\n\nAl hacer uso de nuestras instalaciones confirmas haber leído y aceptado este aviso.\n\n¡Bienvenido/a a nuestra comunidad! 💪\n\nAtentamente,\n{{gym_nombre}}\n{{gym_telefono}}`;
+  navigator.clipboard&&navigator.clipboard.writeText(txt);
+  const btn=event.target; btn.textContent='¡Copiado!';
+  setTimeout(()=>btn.textContent='Copiar plantilla',2000);
+}
+
+function enviarCorreoBienvenida(cliente,svc,vence){
+  const cfg=getEmailCfg();
+  if(!cfg.pubkey||!cfg.service||!cfg.template){ console.log('EmailJS no configurado — correo omitido'); return; }
+  try{ emailjs.init(cfg.pubkey); }catch(e){ return; }
+  emailjs.send(cfg.service, cfg.template,{
+    to_email: cliente.email,
+    nombre: cliente.nombre,
+    gym_nombre: cfg.gymNombre||"Bull's Gym Fitness Center",
+    gym_email: cfg.gymEmail||'',
+    gym_telefono: cfg.gymTel||'',
+    tipo_membresia: svc.label,
+    fecha_inicio: cliente.inicio,
+    fecha_vence: vence,
+    folio: 'GT-'+String(cliente.id).padStart(4,'0'),
+  }).then(()=>console.log('✉ Correo enviado a',cliente.email))
+    .catch(e=>console.warn('Error enviando correo:',e));
+}
+
+function testEmail(){
+  const cfg=getEmailCfg();
+  const msg=document.getElementById('email-test-msg');
+  if(!cfg.pubkey||!cfg.service||!cfg.template){
+    msg.innerHTML='<span style="color:var(--danger);">⚠ Completa las tres claves primero</span>';return;
+  }
+  if(!cfg.gymEmail){
+    msg.innerHTML='<span style="color:var(--danger);">⚠ Agrega el correo del gimnasio</span>';return;
+  }
+  msg.innerHTML='<span style="color:var(--muted);">Enviando...</span>';
+  try{ emailjs.init(cfg.pubkey); }catch(e){
+    msg.innerHTML='<span style="color:var(--danger);">Error al inicializar EmailJS</span>';return;
+  }
+  emailjs.send(cfg.service, cfg.template,{
+    to_email:cfg.gymEmail, nombre:'Cliente de Prueba',
+    gym_nombre:cfg.gymNombre||'Tu Gimnasio', gym_email:cfg.gymEmail,
+    gym_telefono:cfg.gymTel, tipo_membresia:'Mensual',
+    fecha_inicio:todayStr(), fecha_vence:addDays(todayStr(),30), folio:'GT-0000',
+  }).then(()=>{ msg.innerHTML='<span style="color:var(--success);">✓ Correo de prueba enviado a '+cfg.gymEmail+'</span>'; })
+    .catch(e=>{ msg.innerHTML='<span style="color:var(--danger);">✕ Error: '+(e.text||e)+'</span>'; });
+}
+
+// ─── MODAL ──────────────────────────────────────────────────────────────────
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+// ─── INIT ───────────────────────────────────────────────────────────────────
+document.getElementById('sidebar-date').textContent=
+  new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
+renderDashboard(); updateAlertBadge();
+</script>
+</body>
+</html>
